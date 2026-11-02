@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="내 컴퓨터에서 사진으로 살펴보는 실내 식물 분류 도구">
+  <title>초록도감 · 로컬 식물 분류</title>
+  <link rel="icon" href="/static/leaf.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/"><img src="/static/leaf.svg" alt="" width="34" height="34">초록도감<span>PLANT JOURNAL</span></a><span class="local-badge"><i></i>내 컴퓨터에서 분석</span></header>
+  <main>
+    <div class="intro"><p class="eyebrow">A LITTLE CURIOSITY, A LITTLE GREEN.</p><h1>이 초록의 이름이<br>궁금한 순간.</h1><p class="description">식물 사진 한 장을 올려보세요.<br>내 컴퓨터의 AI가 닮은 식물 후보를 찾아드립니다.</p><div class="facts"><span>47개 실내 식물 범주</span><span>CPU 로컬 실행</span><span>사진 저장 안 함</span></div></div>
+    <div class="workspace">
+      <section class="card upload-card" aria-labelledby="upload-title">
+        <div class="card-heading"><span class="step">01</span><h2 id="upload-title">사진 올리기</h2><span class="small">잎과 전체 모습이 선명하게</span></div>
+        <div id="drop-zone" class="drop-zone">
+          <div id="upload-hint"><img class="leaf-mark" src="/static/leaf.svg" alt="" width="64" height="64"><h3>어떤 식물을 만났나요?</h3><p>사진을 여기로 끌어오거나<br>아래 버튼으로 선택해 주세요.</p></div>
+          <img id="preview" alt="선택한 식물 사진 미리보기" hidden>
+          <label class="choose" for="file-input">이미지 선택</label><input id="file-input" type="file" accept="image/jpeg,image/png,image/webp">
+          <p class="formats">JPG · PNG · WebP / 최대 10MB · 2,000만 화소</p>
+        </div>
+        <div id="file-info" class="file-info" hidden><span id="file-name"></span><button id="reset" class="text-button" type="button">선택 해제</button></div>
+        <p id="error" class="error" role="alert" hidden></p>
+        <button id="analyze" class="primary" type="button" disabled>식물 후보 분석하기 <span aria-hidden="true">↗</span></button>
+        <p id="status" class="status" role="status" aria-live="polite">모델 준비 상태를 확인하고 있습니다…</p>
+      </section>
+      <section class="card result-card" aria-labelledby="result-title" aria-busy="false" id="result-card">
+        <div class="card-heading"><span class="step">02</span><h2 id="result-title">식물 후보</h2><span class="estimate">AI 추정</span></div>
+        <div id="empty-result" class="empty-result"><div class="botanical" aria-hidden="true">✳</div><h3>작은 발견을 기다리고 있어요.</h3><p>사진을 선택하고 분석하면<br>닮은 식물 후보 3개가 여기에 표시됩니다.</p></div>
+        <div id="results" hidden><p class="eyebrow result-eyebrow">가장 닮은 후보 · 추정 결과</p><h3 id="top-name"></h3><p id="top-label" class="latin"></p><div class="score-line"><strong id="top-score"></strong><span>모델 상대 점수</span></div><div id="candidates"></div><p id="timing" class="timing"></p><p id="uncertain" class="uncertain" hidden>후보 간 구분이 불확실합니다. 다른 각도에서 찍은 사진도 살펴보세요.</p></div>
+        <div class="disclaimer"><strong>이름을 알아가는 참고 자료로 사용해 주세요.</strong><p>결과는 47개 학습 범주 안에서의 추정치이며, 점수는 정답 확률이 아닙니다. 미지원 식물이나 식물이 아닌 사진에도 후보가 나옵니다. 식용·독성 판단에 사용하지 마세요.</p></div>
+      </section>
+    </div>
+    <section class="tips" aria-label="더 좋은 사진을 위한 팁"><span class="eyebrow">사진 한 장의 작은 요령</span><p><b>01</b> 식물 한 개를 중심으로</p><p><b>02</b> 밝은 자연광 아래에서</p><p><b>03</b> 잎의 형태가 보이도록</p></section>
+    <details><summary>모델과 지원 범위 살펴보기</summary><p>사전 학습된 dima806/house-plant-image-detection의 INT8 ONNX 변환 모델을 사용합니다. 몬스테라, 알로에, 스킨답서스 등 실내 식물 중심의 47개 범주만 비교하며, 모든 식물 종을 식별하는 도구는 아닙니다. 한글 이름은 편의상 제공되며 원래 모델 라벨도 함께 표시합니다. 분석은 인터넷 연결 없이 로컬 CPU에서 수행합니다.</p><a href="https://huggingface.co/onnx-community/house-plant-image-detection-ONNX" target="_blank" rel="noreferrer">모델 출처 ↗</a></details>
+  </main>
+  <footer><span>초록도감</span><span>사진은 분석 중 메모리에서만 처리됩니다. 외부 서버로 전송하지 않습니다.</span></footer>
+</body>
+</html>
