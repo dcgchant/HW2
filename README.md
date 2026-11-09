@@ -81,6 +81,26 @@ python run.py --port 8001
 
 실제 JPG·PNG·WebP 분류, 빈 파일·손상 파일·크기 초과·화소 제한 등 **API 검증 15개를 통과**했습니다. 실제 Chrome에서는 초기 화면과 모델 준비 상태까지 확인했습니다. **브라우저의 파일 선택·미리보기·분석 결과 표시까지 이어지는 전체 흐름은 아직 검증을 완료하지 못했습니다.** API 성공을 브라우저 검증 성공으로 간주하지 않습니다.
 
+## Docker 실행 및 자동 게시
+
+Docker의 Linux 컨테이너 모드에서 아래 명령을 실행합니다. 빌드 대상은 `linux/amd64`이며, Python 3.14.8과 기존 `requirements.txt`를 사용합니다.
+
+```powershell
+docker build --platform linux/amd64 -t greendex:local .
+docker run --rm -p 127.0.0.1:8000:8000 greendex:local
+```
+
+[http://127.0.0.1:8000](http://127.0.0.1:8000)에서 앱을 사용합니다. 이미지는 빌드 중 공개 모델을 내려받아 SHA-256을 확인하고, 앱과 동일한 로더로 CPU 추론을 한 번 실행합니다. 다운로드·설치·추론 중 하나라도 실패하면 빌드가 실패합니다. 모델을 이미지에 포함하므로 실행할 때 모델을 별도로 준비하거나 인터넷에 연결할 필요가 없습니다.
+
+GitHub Actions를 사용하려면 Docker Hub에 `greendex` 저장소를 준비하고, GitHub 저장소의 **Settings → Secrets and variables → Actions → Repository secrets**에 다음 값을 등록합니다.
+
+| Secret | 값 |
+| --- | --- |
+| `DOCKERHUB_USERNAME` | Docker Hub 사용자 이름 |
+| `DOCKERHUB_TOKEN` | 해당 저장소에 push할 수 있는 Docker Hub 액세스 토큰 |
+
+`main`으로 향하는 PR은 이미지 빌드와 HTTP 준비 상태를 확인합니다. `main`에 push하면 같은 검사를 통과한 이미지를 `<Docker Hub 사용자 이름>/greendex:latest`와 커밋 SHA 태그로 게시합니다. 토큰은 게시 단계에서만 사용됩니다. 첫 push 후 GitHub **Actions → Docker CI**에서 빌드 및 게시 결과를 확인할 수 있습니다.
+
 ## 저장소 구성
 
 ```text
@@ -90,6 +110,9 @@ prepare_model.py   모델 다운로드 및 무결성 검증
 run.py             프로젝트 패키지 로드와 로컬 서버 실행
 requirements.txt   버전이 고정된 실행 의존성
 static/            HTML, CSS, JavaScript, 앱 아이콘
+Dockerfile         Linux CPU 이미지 빌드 및 모델 추론 검증
+.dockerignore      Docker 빌드 컨텍스트의 파일 허용 목록
+.github/workflows/ci.yml   GitHub Actions 빌드 및 Docker Hub 게시
 README.md          설치 및 실행 안내
 .gitignore         공유할 파일의 허용 목록
 ```

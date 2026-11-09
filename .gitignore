@@ -15,3 +15,8 @@
 !/static/app.js
 !/static/style.css
 !/static/leaf.svg
+!/Dockerfile
+!/.dockerignore
+!/.github/
+!/.github/workflows/
+!/.github/workflows/ci.yml

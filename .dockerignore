@@ -1,0 +1,12 @@
+# Keep local models, Windows packages, test data, and credentials out of BuildKit.
+*
+!Dockerfile
+!requirements.txt
+!app.py
+!classifier.py
+!prepare_model.py
+!static/
+!static/index.html
+!static/app.js
+!static/style.css
+!static/leaf.svg

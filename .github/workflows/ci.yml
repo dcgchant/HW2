@@ -1,0 +1,57 @@
+name: Docker CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build image and verify CPU inference
+        run: docker build --pull --platform linux/amd64 --tag greendex:ci .
+
+      - name: Verify HTTP startup without network access from the container
+        shell: bash
+        run: |
+          container="$(docker run --detach --network none greendex:ci)"
+          trap 'docker logs "$container"; docker rm --force "$container" >/dev/null' EXIT
+          for attempt in {1..30}; do
+            if docker exec "$container" python -c 'import json; from urllib.request import urlopen; base = "http://127.0.0.1:8000"; health = json.load(urlopen(base + "/api/health", timeout=2)); assert health["ready"] and health["provider"] == "CPUExecutionProvider"; assert urlopen(base + "/", timeout=2).status == 200'; then
+              exit 0
+            fi
+            echo "Waiting for app ($attempt/30)"
+            sleep 2
+          done
+          exit 1
+
+      - name: Publish verified image to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          : "${DOCKERHUB_USERNAME:?Set the DOCKERHUB_USERNAME GitHub secret}"
+          : "${DOCKERHUB_TOKEN:?Set the DOCKERHUB_TOKEN GitHub secret}"
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+          trap 'docker logout >/dev/null' EXIT
+          image="docker.io/${DOCKERHUB_USERNAME}/greendex"
+          docker tag greendex:ci "$image:$GITHUB_SHA"
+          docker tag greendex:ci "$image:latest"
+          docker push "$image:$GITHUB_SHA"
+          docker push "$image:latest"
